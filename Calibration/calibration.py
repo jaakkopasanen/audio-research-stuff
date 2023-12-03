@@ -56,8 +56,10 @@ def mean_std(errors, fig, ax):
     fr.smoothen(window_size=1/3, treble_window_size=1/3)
     fr.raw = fr.smoothed.copy()
     fr.smoothed = []
-    fr.plot(fig=fig, ax=ax, show_fig=False, raw_plot_kwargs={'color': 'C0', 'label': 'Mean'})
-    ax.fill_between(fr.frequency, mean - std, mean + std, facecolor='#c1dff5', label='STD')
+    rms_mean = np.sqrt(np.mean(np.square(mean[fr.frequency < 2000])))
+    rms_std = np.sqrt(np.mean(np.square(std[fr.frequency < 2000])))
+    fr.plot(fig=fig, ax=ax, show_fig=False, raw_plot_kwargs={'color': 'C0', 'label': f'Mean (< 2 kHz): {rms_mean:.2f}'})
+    ax.fill_between(fr.frequency, mean - std, mean + std, facecolor='#c1dff5', label=f'STD (< 2 kHz): {rms_std:.2f}')
     ax.set_ylim([-15, 15])
     ax.legend()
     return fr
@@ -81,6 +83,8 @@ def calibrate_target(mean, target, fig, ax):
 
 def calibrate(db, form, frs, refs, target):
     pairs = form_pairs(frs, refs)
+    if len(pairs) == 0:
+        return None, None, None, None
     fig, axs = init_plot(pairs, f'{db} {form}')
     errors = individual_errors(pairs, fig, axs[0])
     mean = mean_std(errors, fig, axs[1])
